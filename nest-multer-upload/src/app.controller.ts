@@ -1,0 +1,120 @@
+import {
+  Body,
+  Controller,
+  FileTypeValidator,
+  Get,
+  MaxFileSizeValidator,
+  ParseFilePipe,
+  Post,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AppService } from './app.service';
+import {
+  AnyFilesInterceptor,
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
+import { storage } from './stroage';
+import { FileSizeValidationPipe } from './file-size-validate.pipe';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+
+  @Post('aaa')
+  @UseInterceptors(
+    FileInterceptor('aaa', {
+      dest: 'uploads',
+    }),
+  )
+  uploadFile(
+    @UploadedFile(FileSizeValidationPipe) file: Express.Multer.File,
+    @Body() body,
+  ) {
+    console.log('body', body);
+    console.log('file', file);
+    return { message: 'File uploaded successfully' };
+  }
+
+  @Post('bbb')
+  @UseInterceptors(
+    FilesInterceptor('bbb', 3, {
+      dest: 'uploads',
+    }),
+  )
+  uploadFiles(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() body,
+  ) {
+    console.log('body', body);
+    console.log('files', files);
+    return { message: 'Files uploaded successfully' };
+  }
+
+  @Post('ccc')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'aaa', maxCount: 2 },
+        { name: 'bbb', maxCount: 3 },
+      ],
+      {
+        dest: 'uploads',
+      },
+    ),
+  )
+  uploadFileFields(
+    @UploadedFiles()
+    files: { aaa?: Express.Multer.File[]; bbb?: Express.Multer.File[] },
+    @Body() body,
+  ) {
+    console.log('body', body);
+    console.log('files', files);
+    return { message: 'Files uploaded successfully' };
+  }
+
+  @Post('ddd')
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: storage,
+    }),
+  )
+  uploadAnyFiles(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() body,
+  ) {
+    console.log('body', body);
+    console.log('files', files);
+    return { message: 'Files uploaded successfully' };
+  }
+
+  @Post('fff')
+  @UseInterceptors(
+    FileInterceptor('aaa', {
+      dest: 'uploads',
+    }),
+  )
+  uploadFile3(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 1000 }),
+          new FileTypeValidator({ fileType: 'image/jpeg' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() body,
+  ) {
+    console.log('body', body);
+    console.log('file', file);
+  }
+}
