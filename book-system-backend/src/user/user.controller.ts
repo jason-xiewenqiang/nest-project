@@ -16,10 +16,16 @@ import { RegistryUserDto } from './dto/registry-user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post('registry')
+  @Post('register')
   registry(@Body() registryUserDto: RegistryUserDto) {
     console.log(registryUserDto);
-    return 'done';
+    return this.userService.registry(registryUserDto);
+  }
+
+  @Post('login')
+  login(@Body() registryUserDto: RegistryUserDto) {
+    console.log(registryUserDto);
+    return this.userService.login(registryUserDto);
   }
 
   @Post()
